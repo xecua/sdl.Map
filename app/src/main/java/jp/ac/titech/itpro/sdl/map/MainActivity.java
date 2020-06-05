@@ -179,10 +179,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onRequestPermissionsResult(int reqCode, @NonNull String[] permissions, @NonNull int[] grants) {
         Log.d(TAG, "onRequestPermissionsResult");
-        switch (reqCode) {
-            case REQ_PERMISSIONS:
-                startLocationUpdate(false);
-                break;
+        if (reqCode == REQ_PERMISSIONS) {
+            startLocationUpdate(false);
         }
     }
 
