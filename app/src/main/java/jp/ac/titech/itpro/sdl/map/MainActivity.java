@@ -2,9 +2,11 @@ package jp.ac.titech.itpro.sdl.map;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -23,6 +26,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import static com.google.android.gms.maps.GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -39,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient locationClient;
     private LocationRequest request;
     private LocationCallback callback;
+
+    private FloatingActionButton fabGpsFix;
+    private Drawable gpsNotFixedIcon, gpsFixedIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,9 +80,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.d(TAG, "onLocationResult: map == null");
                     return;
                 }
+                fabGpsFix.setImageDrawable(gpsFixedIcon);
+                stopLocationUpdate();
                 map.animateCamera(CameraUpdateFactory.newLatLng(ll));
             }
         };
+
+        gpsNotFixedIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_baseline_gps_not_fixed_24, null);
+        gpsFixedIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_baseline_gps_fixed_24, null);
+        fabGpsFix = findViewById(R.id.fab_gps_fix);
     }
 
     @Override
@@ -107,6 +122,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(TAG, "onMapReady");
         map.moveCamera(CameraUpdateFactory.zoomTo(15f));
         this.map = map;
+        map.setOnCameraMoveStartedListener(reason -> {
+            if (reason == REASON_GESTURE) {
+                fabGpsFix.setImageDrawable(gpsNotFixedIcon);
+            }
+        });
     }
 
     private void startLocationUpdate(boolean reqPermission) {
@@ -123,6 +143,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         locationClient.requestLocationUpdates(request, callback, null);
+    }
+
+    public void onClickFixGps(View view) {
+        Log.d(TAG, "onClickFixGps");
+        startLocationUpdate(true);
     }
 
     @Override
